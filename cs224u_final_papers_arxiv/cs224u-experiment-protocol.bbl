@@ -1,0 +1,63 @@
+\begin{thebibliography}{9}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{FanqingM(2024)}]{chartassistant_dataset}
+FanqingM. 2024.
+\newblock Chartassistant dataset.
+\newblock \url{https://huggingface.co/datasets/FanqingM/ChartAssistant}.
+
+\bibitem[{Huang et~al.(2024)}]{huang2024survey}
+Jiaxing Huang et~al. 2024.
+\newblock A survey on evaluation of multimodal large language models.
+\newblock \emph{arXiv preprint arXiv:2408.15769v1}.
+\newblock \url{https://arxiv.org/pdf/2408.15769v1}.
+
+\bibitem[{Huang et~al.(2023)}]{huang2023layoutlmv3}
+Yupan Huang et~al. 2023.
+\newblock Layoutlmv3: Pre-training for document ai with unified text and image
+  masking.
+\newblock \emph{arXiv preprint arXiv:2204.08387}.
+\newblock \url{https://arxiv.org/abs/2204.08387}.
+
+\bibitem[{Li et~al.(2024)}]{li2024visualizationliteracy}
+Zhimin Li et~al. 2024.
+\newblock Visualization literacy of multimodal large language models: A
+  comparative study.
+\newblock \emph{arXiv preprint arXiv:2407.10996}.
+\newblock \url{https://arxiv.org/abs/2407.10996}.
+
+\bibitem[{Ma et~al.(2024)}]{zhang2024mmgem}
+Feipeng Ma et~al. 2024.
+\newblock Mm-gem: A generative embedding model for multimodal retrieval.
+\newblock \emph{arXiv preprint arXiv:2405.19333}.
+\newblock \url{https://arxiv.org/pdf/2405.19333}.
+
+\bibitem[{Masry et~al.(2022)Masry, Long, Tan, Joty, and
+  Hoque}]{masry2022chartqa}
+Ahmed Masry, Do~Xuan Long, Jia~Qing Tan, Shafiq Joty, and Enamul Hoque. 2022.
+\newblock Chartqa: A benchmark for question answering about charts with visual
+  and logical reasoning.
+\newblock \emph{arXiv preprint arXiv:2203.10244}.
+\newblock \url{https://arxiv.org/abs/2203.10244}.
+
+\bibitem[{Masry et~al.(2023)}]{masry2023unichart}
+Ahmed Masry et~al. 2023.
+\newblock Unichart: Unified pretraining for chart comprehension and reasoning.
+\newblock \emph{arXiv preprint arXiv:2305.14761}.
+\newblock \url{https://arxiv.org/abs/2305.14761}.
+
+\bibitem[{Masry et~al.(2024)}]{lin2024chartinstruct}
+Ahmed Masry et~al. 2024.
+\newblock Chartinstruct: Instruction tuning for chart comprehension and
+  reasoning.
+\newblock \emph{arXiv preprint arXiv:2403.09028}.
+\newblock \url{https://arxiv.org/abs/2403.09028}.
+
+\bibitem[{Meng et~al.(2024)}]{zhang2024chartassistant}
+Fanqing Meng et~al. 2024.
+\newblock Chartassistant: A universal chart multimodal language model via
+  chart-to-table pre-training and multitask instruction tuning.
+\newblock \emph{arXiv preprint arXiv:2401.02384}.
+\newblock \url{https://arxiv.org/abs/2401.02384}.
+
+\end{thebibliography}

@@ -1,0 +1,322 @@
+Chart-Aware Transformers: Learning Structured Embeddings for BI
+Report Understanding
+Akhil Srivatsava
+
+Bimal Dev
+
+Prashant Agarwal
+
+sriakhil25@gmail.com
+
+bimal.d3v@gmail.com
+
+prashant.agarwal92@gmail.com
+
+Pavan Karumuru
+pavankumar.ds20@gmail.com
+
+Abstract
+Traditional vision models that tokenize images
+into uniform patches often fail to capture the
+structured, semantically rich nature of charts
+and BI (Business Intelligence) reports. In this
+work, we introduce Chart-Aware Transformers,
+a novel architecture that models charts as sequences of structured elements—such as titles,
+axes, legends, bars, and annotations—rather
+than pixel-based patches. Each element is embedded with a combination of class, textual,
+and layout features, enabling the model to encode semantic and spatial relationships critical
+for downstream tasks like chart retrieval, question answering, and document understanding.
+By treating charts as compositional units with
+explicit structure, our approach yields semantically faithful and information-rich representations, outperforming patch-based and purely
+textual baselines. We demonstrate that this
+element-centric formulation is better aligned
+with the nature of chart data, unlocking new capabilities for intelligent document understanding in enterprise and analytics workflows.
+
+1
+
+Introduction
+
+Understanding charts and Business Intelligence
+(BI) reports is a critical challenge in visual document analysis. Traditional Vision Transformer
+(ViT)-based models rely on patch-level image tokenization, which often fails to capture the structured, semantic, and spatial relationships between
+elements in a chart. These models lack an explicit
+representation of chart components like axes, legends, bars, titles, and annotations — elements essential for interpreting the information encoded in
+structured visualizations.
+In this paper, we introduce Chart-Aware Transformers, a novel architecture that explicitly models
+chart elements as discrete tokens. Each token is
+enriched with textual, semantic, and layout-aware
+embeddings to reflect its class (e.g., “bar”, “x-axis”,
+“title”), content (e.g., OCR-extracted text), and spa-
+
+Krishna Rao Kakkirala
+krishna.kakkirala@gmail.com
+
+tial location (e.g., bounding box coordinates and
+size). By treating chart elements as the core units of
+representation — rather than raw pixels — we enable Transformer-based reasoning that aligns more
+naturally with the structure and semantics of BI
+charts.
+To train and evaluate our system, we generate
+a large-scale synthetic dataset using maptplotlib,
+covering 43 distinct chart element classes, including components from bar, line, and area charts. For
+each chart, we programmatically extract bounding boxes using the maptplotlib rendering backend, capturing pixel-accurate positions of visual
+elements such as bars, titles, axes, and tick marks.
+Each chart is annotated in COCO-style JSON format, ensuring compatibility with common vision
+datasets and workflows.
+The extracted chart elements are converted into
+fixed-length feature vectors combining class embeddings, OCR/text embeddings, and normalized
+layout information. These vectors are projected
+and fed into a Transformer encoder, enabling downstream tasks like chart retrieval, semantic similarity,
+and question answering.
+This element-centric representation aligns with
+the inherent structure of charts and offers several
+advantages:
+- It preserves semantic and spatial relationships
+lost in patch-based models. - It enables reasoning
+over individual elements and their roles in the chart.
+- It supports generalization to downstream tasks
+such as chart-based question answering, retrieval,
+and summarization.
+We hypothesize and demonstrate that explicitly
+modeling the structured nature of charts leads to
+more informative and task-aligned representations
+compared to baseline models that treat charts as
+unstructured images or pure text.
+
+2
+
+Prior Literature
+
+Chart understanding tasks require models to reason over structured visual elements, including axes,
+legends, and data marks, which general-purpose
+MLLMs like GPT-4V often struggle with due to
+weak visual-semantic grounding and poor layout
+sensitivity (Li et al., 2024; Huang et al., 2024).
+Recent specialized models address these limitations. UniChart (Masry et al., 2023) introduces a
+chart-focused encoder-decoder framework trained
+on 611K charts, supporting tasks like summarization and chart QA. While efficient, it struggles with
+compositional reasoning. ChartAssistant (Meng
+et al., 2024) improves performance via a two-stage
+pipeline (chart-to-table pretraining + multitask instruction tuning) and shows strong generalization
+across chart types, especially in numerical and referring QA. ChartInstruct (Masry et al., 2024)
+complements these with a broad instruction-tuned
+dataset, enhancing chart reasoning without architectural changes.
+To better encode layout-sensitive input, LayoutLMv3 (Huang et al., 2023) integrates text, vision, and layout using a unified ViT backbone. This
+layout-aware modeling is better suited to structured
+documents like charts, especially compared to models like MM-GEM (Ma et al., 2024), which lack
+fine-grained spatial grounding.
+Our approach builds on these insights by modeling chart elements as structured tokens, enriched
+with class, text, and layout embeddings. We evaluate on the ChartAssistant dataset (FanqingM,
+2024), which offers realistic chart-QA pairs, supporting fine-grained benchmarking of reasoning
+over structured visual input.
+
+3
+
+Data
+
+To support the training of our chart element detection model, we developed a Python-based chart
+generation pipeline capable of producing synthetic
+chart images (including bar, line, pie, and stacked
+bar charts) with detailed annotations in the COCO
+format. The pipeline uses libraries such as Matplotlib, NumPy, and Plotly to programmatically
+generate diverse chart types along with structured
+annotations for each visual element.
+The system defines a comprehensive taxonomy
+of chart components (e.g., title, axes, axis titles, tick
+labels, gridlines, legends, bars, lines, and pie slices)
+and extracts precise bounding boxes for each element. These annotations follow the COCO dataset
+
+structure, capturing metadata such as bounding box
+coordinates, area, category IDs, and image associations.
+For each chart type, the pipeline computes spatial annotations using geometric primitives or text
+layout analysis, ensuring pixel-accurate labels. It
+supports various configurations, such as line style
+(e.g., linear, sine, noisy), bar orientation (horizontal or vertical), and pie slice randomization. The
+resulting dataset includes both the rendered chart
+images and a corresponding JSON file of annotations, enabling downstream tasks such as chart
+element detection and visual data extraction.
+This synthetic dataset complements our manually annotated and publicly sourced data (e.g.,
+ChartAssistant), providing a rich and customizable
+training resource for layout-aware chart understanding.
+
+4
+
+Model
+
+We design a Transformer-based encoder model to
+learn structured visual-textual representations from
+chart annotations. Each chart is represented as a
+variable-length sequence of elements (e.g., bars,
+titles, axes), where each element is encoded into a
+fixed-size embedding using a combination of class,
+bounding box, and area features.
+Embedding Layer
+Each chart element is represented by:
+• A one-hot encoded class vector (e.g., bar, title,
+x-axis, y-axis)
+• A normalized bounding box: (x, y, w, h)
+• A normalized area scalar
+We use separate Multi-Layer Perceptrons
+(MLPs) to project each of these features into a
+shared embedding space of dimension D = 256,
+and concatenate the resulting vectors to form the
+final input embedding of dimension 3D = 768 per
+token.
+Transformer Encoder
+The chart-level sequence of embedded elements is
+fed into a Transformer encoder consisting of:
+• Multi-Head Self Attention (MHSA)
+• Feedforward layers with ReLU activation
+• LayerNorm and residual connections
+
+• Positional encoding via order-preserving
+padding
+Unlike traditional autoregressive settings, our
+self-attention blocks do not use causal masks, as
+the model observes all elements simultaneously.
+Classification Head
+We cast the chart understanding task as a counting problem, specifically predicting the number of
+bar elements in a chart. This is framed as a multiclass classification task over the range [0, 100]. After encoding the sequence, we apply mean pooling
+over token embeddings and pass the result through
+a classification head:
+ŷ = Sof tmax(W · M eanP ool(Z) + b)
+where Z is the output of the final transformer
+layer.
+Loss Function
+We use cross-entropy loss to train the model to
+predict the number of bars in each chart. This formulation encourages the model to learn rich tokenlevel representations aligned with global structural
+patterns.
+
+5
+
+used by a task-specific prediction head. This baseline lacks explicit structural input and serves as
+a contrast to our layout-aware Chart Transformer,
+highlighting the benefit of reasoning over elementlevel representations.
+Evaluation
+We benchmark both models on tasks such as predicting the number of chart elements. Since the
+task is inherently classification-based, accuracy is
+used as the primary evaluation metric. This comparison demonstrates the advantage of layout-aware
+modeling for chart understanding, particularly in
+classification tasks involving structured visual elements.
+
+6
+
+In our experiments, the Chart Transformer was
+compared against the Vision Transformer (ViT)
+for the task of predicting the number of chart elements from images. Both models were evaluated
+using accuracy as the primary metric, since the
+task is framed as a classification problem.
+Performance Comparison
+• Chart Transformer: Achieved an accuracy
+of 92% in predicting the number of chart elements across the evaluation dataset.
+
+Methods
+
+We propose a Chart Transformer, a layout-aware,
+Transformer-based architecture designed for structured understanding of chart images. The model
+operates over pre-extracted chart elements—such
+as bars, titles, axes, and legends—represented using
+COCO-style annotations. Each element is embedded using its class label, normalized bounding box
+coordinates, and area. These features are projected
+into a unified embedding space, enriched with positional encodings, and passed through a Transformer
+encoder. The self-attention mechanism enables the
+model to reason over spatial and semantic relationships between chart elements. Chart Transformer
+supports multiple downstream tasks, including element counting, chart-to-JSON conversion, and
+semantic type classification.
+Baseline
+To evaluate the effectiveness of Chart Transformer,
+we compare it against a Vision Transformer (ViT)
+baseline. In this setup, the raw chart image is
+passed through a pre-trained ViT model. The output embedding—typically the [CLS] token—is
+
+Results
+
+• Vision Transformer (ViT): Was consistently
+outperformed by the Chart Transformer, indicating the benefits of incorporating explicit
+layout-aware element representations.
+
+7
+
+Analysis
+
+The Chart Transformer outperformed the Vision
+Transformer (ViT), highlighting the benefits of
+incorporating layout-aware reasoning through explicit element-level embeddings. While the ViT
+model is effective for generic vision tasks, it struggled to capture the spatial and semantic relationships between chart components. This limitation
+led to lower accuracy on tasks that required structural understanding of charts.
+In contrast, the Chart Transformer—by leveraging structured element representations and positional encodings—was better suited to model interelement dependencies. This architectural advantage contributed to improved performance in the
+classification task, demonstrating the importance
+of layout sensitivity in chart understanding models.
+
+8
+
+Conclusion
+
+The Chart Transformer demonstrated superior
+performance compared to the Vision Transformer
+(ViT) in the task of predicting the number of chart
+elements, achieving an accuracy of 92%. By utilizing layout-aware embeddings and a custom architecture designed specifically for structured chart
+data, the Chart Transformer was able to more effectively capture and classify chart elements than the
+ViT, which lacks such specialized handling.
+These results highlight the importance of
+domain-specific architectures for tasks involving
+complex visual structures such as charts. The performance of the Chart Transformer reinforces the
+idea that incorporating knowledge of layout and
+inter-element relationships can significantly enhance model accuracy in chart understanding tasks.
+Future Scope
+Building on the success of the Chart Transformer,
+future work will explore integrating it with existing text encoder models and the Vision Transformer (ViT) to build a unified system. The aim
+is to enable retrieval-augmented generation (RAG)
+pipelines that can jointly process chart visuals and
+textual descriptions. Such a system would support
+natural language queries for retrieving and interpreting chart data, advancing the applicability of
+chart understanding in real-world information retrieval and analytics settings.
+
+9
+
+Known Project Limitations
+
+Our work is subject to several limitations that may
+impact its generalization and real-world applicability.
+First, our training data is largely synthetic and
+may not reflect the full visual diversity of realworld charts, leading to possible performance drops
+in more complex or noisy settings. Second, the annotation schema prioritizes structural elements but
+may miss finer visual or stylistic details.
+Additionally, our task framing simplifies chart
+understanding to classification and counting, which
+does not capture the full spectrum of reasoning often required in practical BI applications. Evaluation is limited to English-language datasets and
+primarily Western-style chart formats, which may
+introduce cultural or linguistic biases.
+Users applying this system in diverse domains
+or languages should account for these constraints,
+
+and future work will aim to improve generalization,
+reasoning depth, and multilingual support.
+
+References
+FanqingM. 2024.
+Chartassistant dataset.
+https://huggingface.co/datasets/
+FanqingM/ChartAssistant.
+Jiaxing Huang et al. 2024. A survey on evaluation of multimodal large language models. arXiv
+preprint arXiv:2408.15769v1. https://arxiv.
+org/pdf/2408.15769v1.
+Yupan Huang et al. 2023. Layoutlmv3: Pre-training
+for document ai with unified text and image masking. arXiv preprint arXiv:2204.08387. https:
+//arxiv.org/abs/2204.08387.
+Zhimin Li et al. 2024. Visualization literacy of multimodal large language models: A comparative
+study. arXiv preprint arXiv:2407.10996. https:
+//arxiv.org/abs/2407.10996.
+Feipeng Ma et al. 2024. Mm-gem: A generative
+embedding model for multimodal retrieval. arXiv
+preprint arXiv:2405.19333. https://arxiv.
+org/pdf/2405.19333.
+Ahmed Masry et al. 2023. Unichart: Unified pretraining for chart comprehension and reasoning. arXiv
+preprint arXiv:2305.14761. https://arxiv.
+org/abs/2305.14761.
+Ahmed Masry et al. 2024. Chartinstruct: Instruction tuning for chart comprehension and reasoning. arXiv preprint arXiv:2403.09028. https:
+//arxiv.org/abs/2403.09028.
+Fanqing Meng et al. 2024. Chartassistant: A universal chart multimodal language model via chartto-table pre-training and multitask instruction tuning. arXiv preprint arXiv:2401.02384. https:
+//arxiv.org/abs/2401.02384.
+
+
